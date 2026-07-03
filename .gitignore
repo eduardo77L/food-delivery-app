@@ -1,14 +1,11 @@
-# Dependencies
 node_modules/
 **/node_modules/
 
-# Build
 dist/
 **/dist/
 build/
 **/build/
 
-# Environment
 .env
 .env.*
 !.env.example
@@ -16,33 +13,27 @@ build/
 **/.env.*
 !**/.env.example
 
-# Logs
 logs/
 *.log
 npm-debug.log*
 
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Prisma
 **/prisma/*.db
 **/prisma/*.db-journal
 
-# Coverage / test
 coverage/
 **/.nyc_output/
 
-# Docker
 *.pid
 
-# Misc
 *.tsbuildinfo
 .turbo/
+.vercel/
