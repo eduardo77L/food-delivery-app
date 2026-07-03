@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - api-gateway
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - '3001:3001'
+    environment:
+      - PORT=3001
+      - AUTH_SERVICE_URL=http://auth-service:3002
+      - USER_SERVICE_URL=http://user-service:3003
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:3004
+      - ORDER_SERVICE_URL=http://order-service:3005
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3006
+      - JWT_SECRET=dev-secret-change-in-production
+    depends_on:
+      - auth-service
+      - user-service
+      - restaurant-service
+      - order-service
+      - notification-service
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - '3002:3002'
+    environment:
+      - PORT=3002
+      - DATABASE_URL=postgresql://user:pass@auth-db:5432/authdb
+      - JWT_SECRET=dev-secret-change-in-production
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_EXPIRES_IN=7d
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  auth-db:
+    image: postgres:15-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: authdb
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d authdb']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./user-service
+    ports:
+      - '3003:3003'
+    environment:
+      - PORT=3003
+      - DATABASE_URL=postgresql://user:pass@user-db:5432/userdb
+      - JWT_SECRET=dev-secret-change-in-production
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  user-db:
+    image: postgres:15-alpine
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: userdb
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d userdb']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  restaurant-service:
+    build: ./restaurant-service
+    ports:
+      - '3004:3004'
+    environment:
+      - PORT=3004
+      - DATABASE_URL=postgresql://user:pass@restaurant-db:5432/restaurantdb
+      - JWT_SECRET=dev-secret-change-in-production
+    depends_on:
+      restaurant-db:
+        condition: service_healthy
+
+  restaurant-db:
+    image: postgres:15-alpine
+    ports:
+      - '5434:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: restaurantdb
+    volumes:
+      - restaurant-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d restaurantdb']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  order-service:
+    build: ./order-service
+    ports:
+      - '3005:3005'
+    environment:
+      - PORT=3005
+      - DATABASE_URL=postgresql://user:pass@order-db:5432/orderdb
+      - JWT_SECRET=dev-secret-change-in-production
+      - USER_SERVICE_URL=http://user-service:3003
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:3004
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3006
+    depends_on:
+      order-db:
+        condition: service_healthy
+
+  order-db:
+    image: postgres:15-alpine
+    ports:
+      - '5435:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: orderdb
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d orderdb']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - '3006:3006'
+    environment:
+      - PORT=3006
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  restaurant-db-data:
+  order-db-data:
